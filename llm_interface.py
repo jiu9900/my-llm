@@ -6,10 +6,11 @@ class QwenLLM:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name, device_map="cpu", torch_dtype="auto", trust_remote_code=True
-        )
+        )       #强制cpu推理, 确定性生成
 
     def answer(self, query, context=""):
         context = context.strip()
+        #双prompt模式
         if not context or context == "未找到相关信息":
             system_prompt = (
                 "你是一个严谨可靠的问答助手。\n"
@@ -37,16 +38,16 @@ class QwenLLM:
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
-                max_new_tokens=256,
+                max_new_tokens=256,     #限制生成长度
                 do_sample=False,
                 pad_token_id=self.tokenizer.eos_token_id,
             )
 
         decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        if "assistant" in decoded:
+        if "assistant" in decoded:      #定位assistant标记提取的有效内容
             answer = decoded.split("assistant")[-1].strip(":> \n")
         else:
             answer = decoded.strip()
 
-        return answer if answer else "抱歉，我暂时无法回答这个问题。"
+        return answer if answer else "抱歉，我暂时无法回答这个问题。"   #空回答
 #llm_interface.py

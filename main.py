@@ -33,13 +33,12 @@ def build_context(results, subject):
         lines.append(f"相关内容 {i+1} (相似度: {r['score']:.2f}): {r['text']}")
     return "".join(lines)
 
-# 策略判断函数，若无检索结果默认 model
-
+# 若问句含有预设关键词，则优先考虑直接从文档回答
 def should_use_local_knowledge(query):
     local_keywords = ['顾九宁', '泰山学堂', '山东大学']
     return any(keyword in query for keyword in local_keywords)
 
-def should_use_rag(results, threshold=0.5):
+def should_use_rag(results, threshold=0.5):     # 若检索结果中有高于阈值的相似度分数，则使用 RAG 策略
     return bool(results) and any(r['score'] > threshold for r in results)
 
 def get_answer_strategy(query, results):
